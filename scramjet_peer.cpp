@@ -12,25 +12,34 @@ boost::asio::ip::tcp::socket s(io_context);
 
 boost::asio::streambuf receive_buffer;
 
-static void print_version(void)
-{
-	uint32_t version_major;
-	std::memcpy(&version_major, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(version_major));
-	receive_buffer.consume(sizeof(version_major));
-	version_major = le32toh(version_major);
 
-	uint32_t version_minor;
-	std::memcpy(&version_minor, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(version_minor));
-	receive_buffer.consume(sizeof(version_minor));
-	version_minor = le32toh(version_minor);
-
-	uint32_t version_patch;
-	std::memcpy(&version_patch, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(version_patch));
-	receive_buffer.consume(sizeof(version_patch));
-	version_patch = le32toh(version_patch);
-
-	std::cout << "Protocol Version: " << std::dec << version_major << "." << version_minor << "." << version_patch << std::endl;
-}
+class ApiVersion {
+public:
+	ApiVersion(boost::asio::streambuf &receive_buffer)
+	{
+		std::memcpy(&m_major, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_major));
+		receive_buffer.consume(sizeof(m_major));
+		m_major = le32toh(m_major);
+	
+		std::memcpy(&m_minor, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_minor));
+		receive_buffer.consume(sizeof(m_minor));
+		m_minor = le32toh(m_minor);
+	
+		std::memcpy(&m_patch, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_patch));
+		receive_buffer.consume(sizeof(m_patch));
+		m_patch = le32toh(m_patch);
+	}
+	
+	void print()
+	{
+		std::cout << "Protocol Version: " << std::dec << m_major << "." << m_minor << "." << m_patch << std::endl;
+	}
+	
+private:
+	uint32_t m_major;
+	uint32_t m_minor;
+	uint32_t m_patch;
+};
 
 void read_version_handler(const boost::system::error_code& ec, std::size_t bytes_transferred)
 {
@@ -39,7 +48,8 @@ void read_version_handler(const boost::system::error_code& ec, std::size_t bytes
 		return;
 	}
 
-	print_version();
+	ApiVersion apiVersion(receive_buffer);
+	apiVersion.print();
 }
 
 void read_message_type_handler(const boost::system::error_code& ec, std::size_t bytes_transferred)
@@ -58,11 +68,12 @@ void read_message_type_handler(const boost::system::error_code& ec, std::size_t 
 	case 1:
 		{
 			std::size_t bytes_in_buffer = receive_buffer.size();
-			if (bytes_in_buffer < 12) {
-				std::size_t bytes_to_read = 12 - bytes_in_buffer;
+			if (bytes_in_buffer < sizeof(ApiVersion)) {
+				std::size_t bytes_to_read = sizeof(ApiVersion) - bytes_in_buffer;
 				boost::asio::async_read(s, receive_buffer, boost::asio::transfer_at_least(bytes_to_read), read_version_handler);
 			} else {
-				print_version();
+				ApiVersion apiVersion(receive_buffer);
+				apiVersion.print();
 			}
 		}
 		break;
