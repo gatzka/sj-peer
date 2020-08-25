@@ -4,41 +4,14 @@
 #include <iostream>
 
 #include <boost/asio.hpp>
-#include <boost/endian/conversion.hpp>
+
+#include "api_version.h"
 
 boost::asio::io_context io_context;
 boost::asio::ip::tcp::socket s(io_context);
 
 boost::asio::streambuf receive_buffer;
 
-
-class ApiVersion {
-public:
-	ApiVersion(boost::asio::streambuf &receive_buffer)
-	{
-		std::memcpy(&m_major, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_major));
-		receive_buffer.consume(sizeof(m_major));
-		boost::endian::little_to_native_inplace(m_major);
-
-		std::memcpy(&m_minor, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_minor));
-		receive_buffer.consume(sizeof(m_minor));
-		boost::endian::little_to_native_inplace(m_minor);
-
-		std::memcpy(&m_patch, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_patch));
-		receive_buffer.consume(sizeof(m_patch));
-		boost::endian::little_to_native_inplace(m_patch);
-	}
-
-	void print()
-	{
-		std::cout << "Protocol Version: " << std::dec << m_major << "." << m_minor << "." << m_patch << std::endl;
-	}
-
-private:
-	uint32_t m_major;
-	uint32_t m_minor;
-	uint32_t m_patch;
-};
 
 void read_version_handler(const boost::system::error_code& ec, std::size_t bytes_transferred)
 {
