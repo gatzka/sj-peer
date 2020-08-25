@@ -6,9 +6,9 @@
 //#include <boost/asio.hpp>
 //#include <boost/endian/conversion.hpp>
 
-class ApiVersion {
+class api_version {
 public:
-	ApiVersion(boost::asio::streambuf &receive_buffer);
+	api_version(boost::asio::streambuf &receive_buffer);
 	void print();
 
 private:
