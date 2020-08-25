@@ -3,9 +3,8 @@
 #include <cstring>
 #include <iostream>
 
-#include <endian.h>
-
 #include <boost/asio.hpp>
+#include <boost/endian/conversion.hpp>
 
 boost::asio::io_context io_context;
 boost::asio::ip::tcp::socket s(io_context);
@@ -19,22 +18,22 @@ public:
 	{
 		std::memcpy(&m_major, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_major));
 		receive_buffer.consume(sizeof(m_major));
-		m_major = le32toh(m_major);
-	
+		boost::endian::little_to_native_inplace(m_major);
+
 		std::memcpy(&m_minor, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_minor));
 		receive_buffer.consume(sizeof(m_minor));
-		m_minor = le32toh(m_minor);
-	
+		boost::endian::little_to_native_inplace(m_minor);
+
 		std::memcpy(&m_patch, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_patch));
 		receive_buffer.consume(sizeof(m_patch));
-		m_patch = le32toh(m_patch);
+		boost::endian::little_to_native_inplace(m_patch);
 	}
-	
+
 	void print()
 	{
 		std::cout << "Protocol Version: " << std::dec << m_major << "." << m_minor << "." << m_patch << std::endl;
 	}
-	
+
 private:
 	uint32_t m_major;
 	uint32_t m_minor;
