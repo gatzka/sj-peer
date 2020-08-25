@@ -58,22 +58,23 @@ void read_message_type_handler(const boost::system::error_code& ec, std::size_t 
 
 void connect_handler(const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& endpoint)
 {
-	if (!ec) {
-		std::cout << "connect successful!" << std::endl;
-		boost::asio::async_read(s, receive_buffer, boost::asio::transfer_at_least(1), read_message_type_handler);
-	} else {
+	if (ec) {
 		std::cerr << "connect unsuccessful, ec: " << ec << std::endl;
+		return;
 	}
+	std::cout << "connect successful!" << std::endl;
+	boost::asio::async_read(s, receive_buffer, boost::asio::transfer_at_least(1), read_message_type_handler);
+
 }
 
 void resolve_handler(const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::results_type results)
 {
-	if (!ec) {
-		std::cout << "resolve successful!" << std::endl;
-		boost::asio::async_connect(s, results, connect_handler);
-	} else {
+	if (ec) {
 		std::cerr << "resolve unsuccessful, ec: " << ec << std::endl;
+		return;
 	}
+	std::cout << "resolve successful!" << std::endl;
+	boost::asio::async_connect(s, results, connect_handler);
 }
 
 int main(void)
