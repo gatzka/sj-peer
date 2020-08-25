@@ -24,4 +24,3 @@ void api_version::print() const
 {
 	std::cout << "API Version: " << std::dec << m_major << "." << m_minor << "." << m_patch << std::endl;
 }
-
