@@ -20,7 +20,7 @@ api_version::api_version(boost::asio::streambuf &receive_buffer)
 	boost::endian::little_to_native_inplace(m_patch);
 }
 
-void api_version::print()
+void api_version::print() const
 {
 	std::cout << "API Version: " << std::dec << m_major << "." << m_minor << "." << m_patch << std::endl;
 }

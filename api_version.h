@@ -9,7 +9,7 @@
 class api_version {
 public:
 	api_version(boost::asio::streambuf &receive_buffer);
-	void print();
+	void print() const;
 
 private:
 	uint32_t m_major;
