@@ -1,0 +1,28 @@
+BasedOnStyle: LLVM
+AccessModifierOffset: -8
+AlignAfterOpenBracket: true
+AlignOperands: true
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Custom
+BreakConstructorInitializers: BeforeComma
+BraceWrapping:
+  AfterClass: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeElse: false
+ColumnLimit: 0
+ConstructorInitializerIndentWidth: 8
+ForEachMacros: ["list_for_each_safe"]
+IndentCaseLabels: false
+IndentGotoLabels: false
+IndentWidth: 8
+Language: Cpp
+NamespaceIndentation: None
+UseTab: ForIndentation
+PointerAlignment: Right
