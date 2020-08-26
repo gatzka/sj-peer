@@ -25,4 +25,4 @@ IndentWidth: 8
 Language: Cpp
 NamespaceIndentation: None
 UseTab: ForIndentation
-PointerAlignment: Right
+PointerAlignment: Left

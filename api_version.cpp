@@ -34,17 +34,17 @@
 
 #include "api_version.h"
 
-api_version::api_version(boost::asio::streambuf &receive_buffer)
+api_version::api_version(boost::asio::streambuf& receive_buffer)
 {
-	std::memcpy(&m_major, boost::asio::buffer_cast<const void *>(receive_buffer.data()), sizeof(m_major));
+	std::memcpy(&m_major, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_major));
 	receive_buffer.consume(sizeof(m_major));
 	boost::endian::little_to_native_inplace(m_major);
 
-	std::memcpy(&m_minor, boost::asio::buffer_cast<const void *>(receive_buffer.data()), sizeof(m_minor));
+	std::memcpy(&m_minor, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_minor));
 	receive_buffer.consume(sizeof(m_minor));
 	boost::endian::little_to_native_inplace(m_minor);
 
-	std::memcpy(&m_patch, boost::asio::buffer_cast<const void *>(receive_buffer.data()), sizeof(m_patch));
+	std::memcpy(&m_patch, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_patch));
 	receive_buffer.consume(sizeof(m_patch));
 	boost::endian::little_to_native_inplace(m_patch);
 }

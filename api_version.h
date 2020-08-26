@@ -32,7 +32,7 @@
 
 class api_version {
 public:
-	api_version(boost::asio::streambuf &receive_buffer);
+	api_version(boost::asio::streambuf& receive_buffer);
 	void print() const;
 
 private:
