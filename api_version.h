@@ -26,6 +26,10 @@
  * SOFTWARE.
  */
 
+#include <cstdint>
+
+#include <boost/asio/streambuf.hpp>
+
 class api_version {
 public:
 	api_version(boost::asio::streambuf &receive_buffer);

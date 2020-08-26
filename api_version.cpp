@@ -26,6 +26,7 @@
  * SOFTWARE.
  */
 
+#include <cstring>
 #include <iostream>
 
 #include <boost/asio/streambuf.hpp>
