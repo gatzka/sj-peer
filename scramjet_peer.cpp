@@ -5,9 +5,11 @@
 
 #include <boost/asio.hpp>
 
-#include "api_version.h"
+#include "protocol_version.h"
 
 boost::asio::io_context io_context;
+
+
 boost::asio::ip::tcp::socket s(io_context);
 
 boost::asio::streambuf receive_buffer;
@@ -20,7 +22,7 @@ void read_version_handler(const boost::system::error_code& ec, std::size_t bytes
 		return;
 	}
 
-	api_version apiVersion(receive_buffer);
+	protocol_version apiVersion(receive_buffer);
 	apiVersion.print();
 }
 
@@ -40,11 +42,11 @@ void read_message_type_handler(const boost::system::error_code& ec, std::size_t 
 	case 1:
 		{
 			std::size_t bytes_in_buffer = receive_buffer.size();
-			if (bytes_in_buffer < sizeof(api_version)) {
-				std::size_t bytes_to_read = sizeof(api_version) - bytes_in_buffer;
+			if (bytes_in_buffer < sizeof(protocol_version)) {
+				std::size_t bytes_to_read = sizeof(protocol_version) - bytes_in_buffer;
 				boost::asio::async_read(s, receive_buffer, boost::asio::transfer_at_least(bytes_to_read), read_version_handler);
 			} else {
-				api_version apiVersion(receive_buffer);
+				protocol_version apiVersion(receive_buffer);
 				apiVersion.print();
 			}
 		}

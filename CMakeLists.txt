@@ -14,7 +14,7 @@ find_package(Threads)
 find_package(Boost 1.71.0 REQUIRED system thread)
 
 add_executable(scramjet_peer
-    api_version.cpp
+    protocol_version.cpp
     scramjet_peer.cpp
 )
 
