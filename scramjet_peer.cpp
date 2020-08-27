@@ -33,11 +33,14 @@
 #include <iostream>
 
 #include <boost/asio.hpp>
+#include <boost/beast.hpp>
 
 #include "protocol_version.h"
 
 static const std::string default_tcp_port = "12345";
 static const std::string default_local_endpoint = "unix_domain_socket_file";
+static const std::string default_websocket_port = "80";
+static const std::string default_websocket_path = "/";
 
 boost::asio::io_context io_context;
 
@@ -98,9 +101,12 @@ void read_message_type_handler(const boost::system::error_code& ec)
 
 int main(void)
 {
+	/// relevant for tcp hand websocket
+	static const std::string host = "localhost";
+
 	// tcp specific handling happens within the following lambdas
-	boost::asio::ip::tcp::resolver resolver(io_context);
-	
+	boost::asio::ip::tcp::resolver tcp_resolver(io_context);
+
 	boost::asio::ip::tcp::socket tcp_socket(io_context);
 	auto tcp_resolve_handler = [&tcp_socket](const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::results_type results)
 	{
@@ -124,7 +130,7 @@ int main(void)
 		};
 		boost::asio::async_connect(tcp_socket, results, tcp_connect_handler);
 	};
-	resolver.async_resolve("localhost", default_tcp_port, tcp_resolve_handler);
+	tcp_resolver.async_resolve(host, default_tcp_port, tcp_resolve_handler);
 	
 	
 	
@@ -144,6 +150,41 @@ int main(void)
 		boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
 	};
 	local_socket.async_connect(ep, local_connect_handler);
+	
+	
+	boost::beast::websocket::stream < boost::asio::ip::tcp::socket > websocket(io_context);
+	
+	auto websocket_resolve_handler = [&websocket](const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::results_type results)
+	{
+		if (ec) {
+			std::cerr << "websocket resolve unsuccessful, ec: " << ec << std::endl;
+			return;
+		}
+		std::cout << "websocket resolve successful!" << std::endl;
+		
+		auto websocket_connect_handler = [&websocket](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& endpoint)
+		{
+			if (ec) {
+				std::cerr << "websocket connect unsuccessful, ec: " << ec.message() << std::endl;
+				return;
+			}
+			std::cout << "websocket connect successful!" << std::endl;
+			
+			auto websocket_handshake_handler = [&websocket](const boost::system::error_code& ec)
+			{
+				if (ec) {
+					std::cerr << "websocket handshake unsuccessful, ec: " << ec << std::endl;
+					return;
+				}
+				generic_stream_socket = std::unique_ptr < boost::asio::generic::stream_protocol::socket > (new boost::asio::generic::stream_protocol::socket(std::move(websocket.next_layer())));
+				boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
+			};
+			websocket.async_handshake(host, default_websocket_path, websocket_handshake_handler);
+			
+		};
+		boost::asio::async_connect(websocket.next_layer(), results, websocket_connect_handler);
+	};
+	tcp_resolver.async_resolve(host, default_websocket_port, websocket_resolve_handler);
 
 	io_context.run();
 
