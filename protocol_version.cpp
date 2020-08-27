@@ -34,7 +34,7 @@
 
 #include "protocol_version.h"
 
-protocol_version::protocol_version(boost::asio::streambuf &receive_buffer)
+protocol_version::protocol_version(boost::asio::streambuf& receive_buffer)
 {
 	std::memcpy(&m_major, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_major));
 	receive_buffer.consume(sizeof(m_major));

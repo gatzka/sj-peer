@@ -32,7 +32,7 @@
 
 class protocol_version {
 public:
-	protocol_version(boost::asio::streambuf &receive_buffer);
+	protocol_version(boost::asio::streambuf& receive_buffer);
 	void print() const;
 
 private:
