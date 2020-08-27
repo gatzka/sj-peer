@@ -36,7 +36,7 @@ FetchContent_Declare(GatzkaToolchainFiles
 )
 FetchContent_MakeAvailable(GatzkaToolchainFiles)
 
-project(scramjet CXX)
+project(scramjet_peer CXX)
 
 find_package(Threads)
 find_package(Boost 1.71.0 REQUIRED system thread)
