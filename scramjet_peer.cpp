@@ -42,8 +42,6 @@ static const std::string default_local_endpoint = "unix_domain_socket_file";
 boost::asio::io_context io_context;
 
 
-boost::asio::ip::tcp::socket tcp_socket(io_context);
-boost::asio::local::stream_protocol::socket local_socket(io_context);
 
 
 /// We have to create it later.
@@ -94,48 +92,57 @@ void read_message_type_handler(const boost::system::error_code& ec)
 	}
 }
 
-void tcp_connect_handler(const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& endpoint)
-{
-	if (ec) {
-		std::cerr << "tcp connect unsuccessful, ec: " << ec.message() << std::endl;
-		return;
-	}
-	std::cout << "tcp connect successful!" << std::endl;
-	
-	generic_stream_socket = std::unique_ptr < boost::asio::generic::stream_protocol::socket > (new boost::asio::generic::stream_protocol::socket(std::move(tcp_socket)));
-	boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
-}
 
-void local_connect_handler(const boost::system::error_code& ec)
-{
-	if (ec) {
-		std::cerr << "local connect unsuccessful, ec: " << ec.message() << std::endl;
-		return;
-	}
-	std::cout << "local connect successful!" << std::endl;
-	
-	generic_stream_socket = std::unique_ptr < boost::asio::generic::stream_protocol::socket > (new boost::asio::generic::stream_protocol::socket(std::move(local_socket)));
-	boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
-}
 
-void tcp_resolve_handler(const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::results_type results)
-{
-	if (ec) {
-		std::cerr << "tcp resolve unsuccessful, ec: " << ec << std::endl;
-		return;
-	}
-	std::cout << "tcp resolve successful!" << std::endl;
-	boost::asio::async_connect(tcp_socket, results, tcp_connect_handler);
-}
+
 
 int main(void)
 {
-	// tcp
+	// tcp specific handling happens within the following lambdas
 	boost::asio::ip::tcp::resolver resolver(io_context);
+	
+	boost::asio::ip::tcp::socket tcp_socket(io_context);
+	auto tcp_resolve_handler = [&tcp_socket](const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::results_type results)
+	{
+		if (ec) {
+			std::cerr << "tcp resolve unsuccessful, ec: " << ec << std::endl;
+			return;
+		}
+		std::cout << "tcp resolve successful!" << std::endl;
+		
+		
+		auto tcp_connect_handler = [&tcp_socket](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& endpoint)
+		{
+			if (ec) {
+				std::cerr << "tcp connect unsuccessful, ec: " << ec.message() << std::endl;
+				return;
+			}
+			std::cout << "tcp connect successful!" << std::endl;
+			
+			generic_stream_socket = std::unique_ptr < boost::asio::generic::stream_protocol::socket > (new boost::asio::generic::stream_protocol::socket(std::move(tcp_socket)));
+			boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
+		};
+		boost::asio::async_connect(tcp_socket, results, tcp_connect_handler);
+	};
 	resolver.async_resolve("localhost", default_tcp_port, tcp_resolve_handler);
-
-	// unix domain socket
+	
+	
+	
+	// unix domain socket specific handling happens within the following lambdas
+	boost::asio::local::stream_protocol::socket local_socket(io_context);
 	boost::asio::local::stream_protocol::endpoint ep(default_local_endpoint);
+	
+	auto local_connect_handler = [&local_socket](const boost::system::error_code& ec)
+	{
+		if (ec) {
+			std::cerr << "local connect unsuccessful, ec: " << ec.message() << std::endl;
+			return;
+		}
+		std::cout << "local connect successful!" << std::endl;
+		
+		generic_stream_socket = std::unique_ptr < boost::asio::generic::stream_protocol::socket > (new boost::asio::generic::stream_protocol::socket(std::move(local_socket)));
+		boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
+	};
 	local_socket.async_connect(ep, local_connect_handler);
 
 	io_context.run();
