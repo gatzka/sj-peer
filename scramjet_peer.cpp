@@ -41,6 +41,9 @@ boost::asio::io_context io_context;
 
 boost::asio::ip::tcp::socket s(io_context);
 
+/// We have to create it later.
+std::unique_ptr < boost::asio::generic::stream_protocol::socket > generic_stream_socket;
+
 boost::asio::streambuf receive_buffer;
 
 void read_version_handler(const boost::system::error_code& ec, std::size_t bytes_transferred)
@@ -54,10 +57,10 @@ void read_version_handler(const boost::system::error_code& ec, std::size_t bytes
 	apiVersion.print();
 }
 
-void read_message_type_handler(boost::asio::ip::tcp::socket& socket, const boost::system::error_code& ec)
+void read_message_type_handler(const boost::system::error_code& ec)
 {
 	if (ec) {
-		std::cerr << "message type read unsuccessful, ec: " << ec << std::endl;
+		std::cerr << "message type read unsuccessful, ec: " << ec.message() << std::endl;
 		return;
 	}
 	uint8_t message_type;
@@ -72,7 +75,7 @@ void read_message_type_handler(boost::asio::ip::tcp::socket& socket, const boost
 			std::size_t bytes_in_buffer = receive_buffer.size();
 			if (bytes_in_buffer < sizeof(protocol_version)) {
 				std::size_t bytes_to_read = sizeof(protocol_version) - bytes_in_buffer;
-				boost::asio::async_read(socket, receive_buffer, boost::asio::transfer_at_least(bytes_to_read), read_version_handler);
+				boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(bytes_to_read), read_version_handler);
 			} else {
 				protocol_version apiVersion(receive_buffer);
 				apiVersion.print();
@@ -89,14 +92,13 @@ void read_message_type_handler(boost::asio::ip::tcp::socket& socket, const boost
 void connect_handler(const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& endpoint)
 {
 	if (ec) {
-		std::cerr << "connect unsuccessful, ec: " << ec << std::endl;
+		std::cerr << "connect unsuccessful, ec: " << ec.message() << std::endl;
 		return;
 	}
 	std::cout << "connect successful!" << std::endl;
 	
-	//boost::asio::generic::stream_protocol::socket generic_stream_socket(std::move(s));
-	boost::asio::async_read(s, receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::ref(s), std::placeholders::_1));
-
+	generic_stream_socket = std::unique_ptr < boost::asio::generic::stream_protocol::socket > (new boost::asio::generic::stream_protocol::socket(std::move(s)));
+	boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
 }
 
 void resolve_handler(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results)
