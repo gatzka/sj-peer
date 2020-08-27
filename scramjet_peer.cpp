@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <iostream>
 
 #include <boost/asio.hpp>
@@ -53,7 +54,7 @@ void read_version_handler(const boost::system::error_code& ec, std::size_t bytes
 	apiVersion.print();
 }
 
-void read_message_type_handler(const boost::system::error_code& ec, std::size_t bytes_transferred)
+void read_message_type_handler(boost::asio::ip::tcp::socket& socket, const boost::system::error_code& ec)
 {
 	if (ec) {
 		std::cerr << "message type read unsuccessful, ec: " << ec << std::endl;
@@ -71,7 +72,7 @@ void read_message_type_handler(const boost::system::error_code& ec, std::size_t 
 			std::size_t bytes_in_buffer = receive_buffer.size();
 			if (bytes_in_buffer < sizeof(protocol_version)) {
 				std::size_t bytes_to_read = sizeof(protocol_version) - bytes_in_buffer;
-				boost::asio::async_read(s, receive_buffer, boost::asio::transfer_at_least(bytes_to_read), read_version_handler);
+				boost::asio::async_read(socket, receive_buffer, boost::asio::transfer_at_least(bytes_to_read), read_version_handler);
 			} else {
 				protocol_version apiVersion(receive_buffer);
 				apiVersion.print();
@@ -92,7 +93,10 @@ void connect_handler(const boost::system::error_code& ec, const boost::asio::ip:
 		return;
 	}
 	std::cout << "connect successful!" << std::endl;
-	boost::asio::async_read(s, receive_buffer, boost::asio::transfer_at_least(1), read_message_type_handler);
+	
+	//boost::asio::generic::stream_protocol::socket generic_stream_socket(std::move(s));
+	boost::asio::async_read(s, receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::ref(s), std::placeholders::_1));
+
 }
 
 void resolve_handler(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results)
