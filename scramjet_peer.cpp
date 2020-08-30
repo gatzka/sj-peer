@@ -39,7 +39,10 @@
 #include "protocol_version.h"
 
 static const std::string default_tcp_port = "12345";
-static const std::string default_local_endpoint = "unix_domain_socket_file";
+
+/// abstract unix domain socket address has a leading '\0'!
+static const std::string default_local_endpoint = std::string( 1, '\0').append("/tmp/scramjet");
+
 static const std::string default_websocket_port = "80";
 static const std::string default_websocket_path = "/";
 
