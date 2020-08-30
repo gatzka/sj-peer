@@ -40,4 +40,3 @@ private:
 	uint32_t m_minor;
 	uint32_t m_patch;
 };
-
