@@ -34,6 +34,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
+#include <boost/endian/conversion.hpp>
 
 #include "protocol_version.h"
 
@@ -49,23 +50,8 @@ std::unique_ptr<boost::asio::generic::stream_protocol::socket> generic_stream_so
 
 boost::asio::streambuf receive_buffer;
 
-void read_version_handler(const boost::system::error_code& ec, std::size_t bytes_transferred)
+void handle_message(boost::asio::streambuf& receive_buffer)
 {
-	if (ec) {
-		std::cerr << "read version info unsucessful, ec: " << ec << std::endl;
-		return;
-	}
-
-	protocol_version apiVersion(receive_buffer);
-	apiVersion.print();
-}
-
-void read_message_type_handler(const boost::system::error_code& ec)
-{
-	if (ec) {
-		std::cerr << "message type read unsuccessful, ec: " << ec.message() << std::endl;
-		return;
-	}
 	uint8_t message_type;
 	std::memcpy(&message_type, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(message_type));
 	receive_buffer.consume(sizeof(message_type));
@@ -74,19 +60,45 @@ void read_message_type_handler(const boost::system::error_code& ec)
 	switch (message_type) {
 	/// \todo will there be an interface header from scramjet containing constants regarding the protocol
 	case 1: {
-		std::size_t bytes_in_buffer = receive_buffer.size();
-		if (bytes_in_buffer < sizeof(protocol_version)) {
-			std::size_t bytes_to_read = sizeof(protocol_version) - bytes_in_buffer;
-			boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(bytes_to_read), read_version_handler);
-		} else {
-			protocol_version apiVersion(receive_buffer);
-			apiVersion.print();
-		}
+		protocol_version protocol_version(receive_buffer);
+		protocol_version.print();
 	} break;
 	default:
 		// since we don't know how much to read to get behind the unknown type, we are lost here and should disconnect!
 		std::cerr << "unknown message type!" << std::endl;
 		break;
+	}
+}
+
+void read_message(const boost::system::error_code& ec)
+{
+	if (ec) {
+		std::cerr << "message read unsuccessful, ec: " << ec.message() << std::endl;
+		return;
+	}
+
+	handle_message(receive_buffer);
+}
+
+void read_message_length(const boost::system::error_code& ec)
+{
+	if (ec) {
+		std::cerr << "message length read unsuccessful, ec: " << ec.message() << std::endl;
+		return;
+	}
+
+	uint32_t message_length;
+	std::memcpy(&message_length, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(message_length));
+	receive_buffer.consume(sizeof(message_length));
+	boost::endian::little_to_native_inplace(message_length);
+	std::cout << "message_length: " << std::dec << message_length << std::endl;
+
+	std::size_t bytes_in_buffer = receive_buffer.size();
+	if (bytes_in_buffer < (size_t)message_length) {
+		std::size_t bytes_to_read = sizeof(protocol_version) - bytes_in_buffer;
+		boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(bytes_to_read), std::bind(read_message, std::placeholders::_1));
+	} else {
+		handle_message(receive_buffer);
 	}
 }
 
@@ -114,7 +126,7 @@ int main(void)
 			std::cout << "tcp connect successful!" << std::endl;
 
 			generic_stream_socket = std::unique_ptr<boost::asio::generic::stream_protocol::socket>(new boost::asio::generic::stream_protocol::socket(std::move(tcp_socket)));
-			boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
+			boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(4), std::bind(read_message_length, std::placeholders::_1));
 		};
 		boost::asio::async_connect(tcp_socket, results, tcp_connect_handler);
 	};
@@ -132,7 +144,7 @@ int main(void)
 		std::cout << "local connect successful!" << std::endl;
 
 		generic_stream_socket = std::unique_ptr<boost::asio::generic::stream_protocol::socket>(new boost::asio::generic::stream_protocol::socket(std::move(local_socket)));
-		boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
+		boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(4), std::bind(read_message_length, std::placeholders::_1));
 	};
 	local_socket.async_connect(ep, local_connect_handler);
 
@@ -158,7 +170,7 @@ int main(void)
 					return;
 				}
 				generic_stream_socket = std::unique_ptr<boost::asio::generic::stream_protocol::socket>(new boost::asio::generic::stream_protocol::socket(std::move(websocket.next_layer())));
-				boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(1), std::bind(read_message_type_handler, std::placeholders::_1));
+				boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(4), std::bind(read_message_length, std::placeholders::_1));
 			};
 			websocket.async_handshake(host, default_websocket_path, websocket_handshake_handler);
 		};
