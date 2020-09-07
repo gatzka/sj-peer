@@ -39,9 +39,9 @@
 #include "protocol_version.h"
 
 static const std::string default_tcp_port = "12345";
-static const std::string default_local_endpoint = "unix_domain_socket_file";
-static const std::string default_websocket_port = "80";
-static const std::string default_websocket_path = "/";
+static const std::string default_local_endpoint = "/tmp/scramjet";
+static const std::string default_websocket_port = "8080";
+static const std::string default_websocket_path = "/api/scramjet/1.0/";
 
 boost::asio::io_context io_context;
 
@@ -99,6 +99,26 @@ void read_message_length(const boost::system::error_code& ec)
 		boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(bytes_to_read), std::bind(read_message, std::placeholders::_1));
 	} else {
 		handle_message(receive_buffer);
+	}
+}
+
+void got_ws_message(boost::beast::error_code ec, std::size_t bytes_transferred)
+{
+	if (ec) {
+		std::cout << "error in read " << ec.message() << std::endl;
+	}
+
+	uint32_t message_length;
+	std::memcpy(&message_length, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(message_length));
+	receive_buffer.consume(sizeof(message_length));
+	boost::endian::little_to_native_inplace(message_length);
+	std::cout << "message_length: " << std::dec << message_length << std::endl;
+
+	std::size_t bytes_in_buffer = receive_buffer.size();
+	if (bytes_in_buffer == (size_t)message_length) {
+		handle_message(receive_buffer);
+	} else {
+		std::cout << "length and message not in same frame!" << ec.message() << std::endl;
 	}
 }
 
@@ -169,8 +189,7 @@ int main(void)
 					std::cerr << "websocket handshake unsuccessful, ec: " << ec << std::endl;
 					return;
 				}
-				generic_stream_socket = std::unique_ptr<boost::asio::generic::stream_protocol::socket>(new boost::asio::generic::stream_protocol::socket(std::move(websocket.next_layer())));
-				boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(4), std::bind(read_message_length, std::placeholders::_1));
+				websocket.async_read(receive_buffer, got_ws_message);
 			};
 			websocket.async_handshake(host, default_websocket_path, websocket_handshake_handler);
 		};
