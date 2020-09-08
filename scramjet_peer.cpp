@@ -60,7 +60,7 @@ void handle_message(boost::asio::streambuf& receive_buffer)
 	switch (message_type) {
 	/// \todo will there be an interface header from scramjet containing constants regarding the protocol
 	case 1: {
-		protocol_version protocol_version(receive_buffer);
+		scramjet::protocol_version protocol_version(receive_buffer);
 		protocol_version.print();
 	} break;
 	default:
@@ -70,16 +70,7 @@ void handle_message(boost::asio::streambuf& receive_buffer)
 	}
 }
 
-void read_message(const boost::system::error_code& ec)
-{
-	if (ec) {
-		std::cerr << "message read unsuccessful, ec: " << ec.message() << std::endl;
-		return;
-	}
-
-	handle_message(receive_buffer);
-}
-
+/// for tcp and udp
 void read_message_length(const boost::system::error_code& ec)
 {
 	if (ec) {
@@ -95,14 +86,22 @@ void read_message_length(const boost::system::error_code& ec)
 
 	std::size_t bytes_in_buffer = receive_buffer.size();
 	if (bytes_in_buffer < (size_t)message_length) {
-		std::size_t bytes_to_read = sizeof(protocol_version) - bytes_in_buffer;
-		boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(bytes_to_read), std::bind(read_message, std::placeholders::_1));
+		auto read_message = [](const boost::system::error_code& ec, std::size_t)
+		{
+			if (ec) {
+				std::cerr << "message read unsuccessful, ec: " << ec.message() << std::endl;
+				return;
+			}
+			handle_message(receive_buffer);
+		};
+		std::size_t bytes_to_read = sizeof(scramjet::protocol_version) - bytes_in_buffer;
+		boost::asio::async_read(*generic_stream_socket.get(), receive_buffer, boost::asio::transfer_at_least(bytes_to_read), read_message);
 	} else {
 		handle_message(receive_buffer);
 	}
 }
 
-void got_ws_message(boost::beast::error_code ec, std::size_t bytes_transferred)
+void got_ws_message(boost::beast::error_code ec)
 {
 	if (ec) {
 		std::cout << "error in read " << ec.message() << std::endl;
@@ -118,7 +117,7 @@ void got_ws_message(boost::beast::error_code ec, std::size_t bytes_transferred)
 	if (bytes_in_buffer == (size_t)message_length) {
 		handle_message(receive_buffer);
 	} else {
-		std::cout << "length and message not in same frame!" << ec.message() << std::endl;
+		std::cerr << "Length and message not in same frame!" << ec.message() << std::endl;
 	}
 }
 
@@ -138,7 +137,7 @@ int main(void)
 		}
 		std::cout << "tcp resolve successful!" << std::endl;
 
-		auto tcp_connect_handler = [&tcp_socket](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& endpoint) {
+		auto tcp_connect_handler = [&tcp_socket](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint&) {
 			if (ec) {
 				std::cerr << "tcp connect unsuccessful, ec: " << ec.message() << std::endl;
 				return;
@@ -168,8 +167,9 @@ int main(void)
 	};
 	local_socket.async_connect(ep, local_connect_handler);
 
-	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> websocket(io_context);
 
+
+	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> websocket(io_context);
 	auto websocket_resolve_handler = [&websocket](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results) {
 		if (ec) {
 			std::cerr << "websocket resolve unsuccessful, ec: " << ec << std::endl;
@@ -177,7 +177,7 @@ int main(void)
 		}
 		std::cout << "websocket resolve successful!" << std::endl;
 
-		auto websocket_connect_handler = [&websocket](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& endpoint) {
+		auto websocket_connect_handler = [&websocket](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint&) {
 			if (ec) {
 				std::cerr << "websocket connect unsuccessful, ec: " << ec.message() << std::endl;
 				return;
@@ -189,7 +189,7 @@ int main(void)
 					std::cerr << "websocket handshake unsuccessful, ec: " << ec << std::endl;
 					return;
 				}
-				websocket.async_read(receive_buffer, got_ws_message);
+				websocket.async_read(receive_buffer, std::bind(got_ws_message, std::placeholders::_1));
 			};
 			websocket.async_handshake(host, default_websocket_path, websocket_handshake_handler);
 		};
