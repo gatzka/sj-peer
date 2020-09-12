@@ -26,30 +26,16 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.9)
+project(scramjet_peer LANGUAGES CXX)
 
-include(FetchContent)
+add_executable(add_state add_state.cpp)
 
-FetchContent_Declare(GatzkaToolchainFiles
-    GIT_REPOSITORY https://github.com/gatzka/cmake-toolchain-files.git
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/toolchains
-)
-FetchContent_MakeAvailable(GatzkaToolchainFiles)
-
-project(scramjet_peer_all)
-
-add_subdirectory(lib)
-add_subdirectory(examples)
-
-#find_package(Threads)
-#find_package(Boost 1.71.0 REQUIRED system thread)
-#
-#add_executable(scramjet_peer
-#    protocol_version.cpp
-#    scramjet_peer.cpp
-#)
-#
-#target_link_libraries(scramjet_peer
-#    ${CMAKE_THREAD_LIBS_INIT}
-#)
+get_property(targets DIRECTORY "${CMAKE_CURRENT_LIST_DIR}" PROPERTY BUILDSYSTEM_TARGETS)
+foreach(tgt ${targets})
+    get_target_property(target_type ${tgt} TYPE)
+    if (target_type STREQUAL "EXECUTABLE")
+        target_link_libraries(${tgt} scramjet_peer::scramjet_peer)
+    endif()
+endforeach()
 

@@ -26,30 +26,29 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.9)
+project(scramjet_peer VERSION 0.0.1 LANGUAGES CXX)
 
-include(FetchContent)
-
-FetchContent_Declare(GatzkaToolchainFiles
-    GIT_REPOSITORY https://github.com/gatzka/cmake-toolchain-files.git
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/toolchains
+add_library(${PROJECT_NAME}
+    scramjet/jet_connection.hpp
+    scramjet/jet_peer.cpp
+    scramjet/jet_peer.hpp
+    scramjet/socket_jet_connection.cpp
+    scramjet/socket_jet_connection.hpp
 )
-FetchContent_MakeAvailable(GatzkaToolchainFiles)
 
-project(scramjet_peer_all)
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-add_subdirectory(lib)
-add_subdirectory(examples)
+target_include_directories(${PROJECT_NAME}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+)
 
-#find_package(Threads)
-#find_package(Boost 1.71.0 REQUIRED system thread)
-#
-#add_executable(scramjet_peer
-#    protocol_version.cpp
-#    scramjet_peer.cpp
-#)
-#
-#target_link_libraries(scramjet_peer
-#    ${CMAKE_THREAD_LIBS_INIT}
-#)
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+        CXX_STANDARD 11
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+)
+
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_11)
 
