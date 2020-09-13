@@ -72,7 +72,8 @@ void jet_peer::connected(scramjet::error_code ec)
 	}
 
 	using namespace std::placeholders;
-	connection->receive_message(std::bind(&jet_peer::message_received, this, _1, _2, _3));
+_3));
+	connection->receive_message(std::bind(&jet_peer::version_received, this, _1, _2, _3));
 }
 
 void jet_peer::disconnect(void) noexcept
@@ -97,6 +98,22 @@ static bool is_correct_protocol_version(const uint8_t* buffer, size_t buffer_len
     return v.is_compatible(supported_version);
 }
 
+void jet_peer::version_received(enum error_code ec, const uint8_t* message, size_t message_length)
+{
+	if (ec != scramjet::error_code::SCRAMJET_OK) {
+			disconnect();
+			return;
+	}
+
+	if (!is_correct_protocol_version(message, message_length)) {
+			std::cerr << "protocol API version not supported!" << std::endl;
+			return;
+	}
+	
+	using namespace std::placeholders;
+	connection->receive_message(std::bind(&jet_peer::message_received, this, _1, _2, _3));
+}
+
 void jet_peer::message_received(enum error_code ec, const uint8_t* message, size_t message_length)
 {
     if (ec != scramjet::error_code::SCRAMJET_OK) {
@@ -104,13 +121,6 @@ void jet_peer::message_received(enum error_code ec, const uint8_t* message, size
         return;
     }
 
-    if (!first_message_received) {
-        first_message_received = true;
-        if (!is_correct_protocol_version(message, message_length)) {
-            std::cerr << "protocol API version not supported!" << std::endl;
-            return;
-        }
-    }
 	std::cout << "Got message of length: " << message_length << std::endl;
 }
 } // namespace scramjet
