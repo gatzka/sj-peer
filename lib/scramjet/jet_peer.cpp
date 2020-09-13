@@ -72,7 +72,6 @@ void jet_peer::connected(scramjet::error_code ec)
 	}
 
 	using namespace std::placeholders;
-_3));
 	connection->receive_message(std::bind(&jet_peer::version_received, this, _1, _2, _3));
 }
 
@@ -104,6 +103,8 @@ void jet_peer::version_received(enum error_code ec, const uint8_t* message, size
 			disconnect();
 			return;
 	}
+
+	std::cout << "Got message of length: " << message_length << std::endl;
 
 	if (!is_correct_protocol_version(message, message_length)) {
 			std::cerr << "protocol API version not supported!" << std::endl;
