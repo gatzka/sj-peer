@@ -77,6 +77,7 @@ void socket_jet_connection::disconnect(void) noexcept
 
 void socket_jet_connection::resolve_handler(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results) noexcept
 {
+	deadline.cancel();
 	if (ec) {
 		if (ec == boost::asio::error::operation_aborted) {
 			connected_callback(SCRAMJET_OPERATION_ABORTED);
@@ -86,8 +87,6 @@ void socket_jet_connection::resolve_handler(const boost::system::error_code& ec,
 		connected_callback(SCRAMJET_HOST_NOT_FOUND);
 		return;
 	}
-
-	deadline.cancel();
 
 	using namespace std::placeholders;
 	boost::asio::async_connect(tcp_socket, results, std::bind(&socket_jet_connection::connect_handler, this, _1, _2));
@@ -106,6 +105,7 @@ void socket_jet_connection::resolve_timeout_handler(const boost::system::error_c
 
 void socket_jet_connection::connect_handler(const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& ep) noexcept
 {
+	deadline.cancel();
 	if (ec) {
 		if (ec == boost::asio::error::operation_aborted) {
 			connected_callback(SCRAMJET_OPERATION_ABORTED);
@@ -115,8 +115,6 @@ void socket_jet_connection::connect_handler(const boost::system::error_code& ec,
 		connected_callback(SCRAMJET_CONNECTION_REFUSED);
 		return;
 	}
-
-	deadline.cancel();
 
 	generic_stream_socket = std::unique_ptr<boost::asio::generic::stream_protocol::socket>(new boost::asio::generic::stream_protocol::socket(std::move(tcp_socket)));
 	connected_callback(SCRAMJET_OK);
