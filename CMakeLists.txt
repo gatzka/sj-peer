@@ -41,15 +41,3 @@ project(scramjet_peer_all)
 add_subdirectory(lib)
 add_subdirectory(examples)
 
-#find_package(Threads)
-#find_package(Boost 1.71.0 REQUIRED system thread)
-#
-#add_executable(scramjet_peer
-#    protocol_version.cpp
-#    scramjet_peer.cpp
-#)
-#
-#target_link_libraries(scramjet_peer
-#    ${CMAKE_THREAD_LIBS_INIT}
-#)
-

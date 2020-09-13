@@ -29,10 +29,15 @@
 cmake_minimum_required(VERSION 3.9)
 project(scramjet_peer VERSION 0.0.1 LANGUAGES CXX)
 
+find_package(Boost 1.71.0 REQUIRED system QUIET)
+
 add_library(${PROJECT_NAME}
+    scramjet/error_code.hpp
     scramjet/jet_connection.hpp
     scramjet/jet_peer.cpp
     scramjet/jet_peer.hpp
+    scramjet/protocol_version.cpp
+    scramjet/protocol_version.hpp
     scramjet/socket_jet_connection.cpp
     scramjet/socket_jet_connection.hpp
 )
@@ -45,7 +50,7 @@ target_include_directories(${PROJECT_NAME}
 
 set_target_properties(${PROJECT_NAME}
     PROPERTIES
-        CXX_STANDARD 11
+        CXX_STANDARD 14
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
 )

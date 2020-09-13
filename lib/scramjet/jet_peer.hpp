@@ -29,16 +29,31 @@
 #ifndef SCRAMJET__JET_PEER_HPP
 #define SCRAMJET__JET_PEER_HPP
 
-#include "jet_connection.hpp"
+#include <chrono>
+#include <memory>
+
+#include "scramjet/error_code.hpp"
+#include "scramjet/jet_connection.hpp"
 
 namespace scramjet {
 
 class jet_peer final {
 public:
-	jet_peer(const jet_connection& connection) noexcept;
-    virtual ~jet_peer();
+	jet_peer(std::unique_ptr<jet_connection> c) noexcept;
+	virtual ~jet_peer();
+
+	void connect(const connected_callback_t& connect_callback, std::chrono::milliseconds timeout) noexcept;
+	void disconnect(void) noexcept;
+
+private:
+	std::unique_ptr<jet_connection> connection;
+	connected_callback_t connected_callback;
+
+	void connected(scramjet::error_code ec);
+	void message_received(enum error_code ec, const uint8_t* message, size_t message_length);
+
+    bool first_message_received = false;
 };
 } // namespace scramjet
-
 
 #endif

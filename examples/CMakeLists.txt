@@ -29,13 +29,21 @@
 cmake_minimum_required(VERSION 3.9)
 project(scramjet_peer LANGUAGES CXX)
 
+find_package(Threads QUIET)
+find_package(Boost 1.71.0 REQUIRED system QUIET)
+
 add_executable(add_state add_state.cpp)
 
 get_property(targets DIRECTORY "${CMAKE_CURRENT_LIST_DIR}" PROPERTY BUILDSYSTEM_TARGETS)
 foreach(tgt ${targets})
     get_target_property(target_type ${tgt} TYPE)
     if (target_type STREQUAL "EXECUTABLE")
-        target_link_libraries(${tgt} scramjet_peer::scramjet_peer)
+        target_link_libraries(${tgt} scramjet_peer::scramjet_peer ${CMAKE_THREAD_LIBS_INIT})
+        set_target_properties(${tgt} PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+    )
     endif()
 endforeach()
 
