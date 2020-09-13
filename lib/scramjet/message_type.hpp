@@ -26,34 +26,17 @@
  * SOFTWARE.
  */
 
-#include <boost/asio.hpp>
-#include <chrono>
-#include <cstdbool>
-#include <cstdlib>
-#include <functional>
-#include <iostream>
-#include <memory>
+#ifndef SCRAMJET__MESSAGE_TYPE_HPP
+#define SCRAMJET__MESSAGE_TYPE_HPP
 
-#include <scramjet/error_code.hpp>
-#include <scramjet/jet_peer.hpp>
-#include <scramjet/socket_jet_connection.hpp>
+namespace scramjet {
+enum message_type {
+	MESSAGE_API_VERSION = 1,
+	MESSAGE_REQUEST = 2,
+	MESSAGE_RESPONSE = 3
+};
 
-static void connected(enum scramjet::error_code ec)
-{
-	if (ec == scramjet::error_code::SCRAMJET_OK) {
-		std::cout << "peer connected!" << std::endl;
-	} else {
-		std::cout << "peer not connected!" << std::endl;
-    }
-}
+} // namespace scramjet
 
-int main(void)
-{
-	boost::asio::io_context io_context;
-	scramjet::jet_peer peer(std::make_unique<scramjet::socket_jet_connection>(io_context, "localhost"));
+#endif
 
-	peer.connect(NULL, std::chrono::milliseconds(100));
-	//peer.connect(std::bind(&connected, std::placeholders::_1), std::chrono::milliseconds(100));
-	io_context.run();
-	return EXIT_SUCCESS;
-}

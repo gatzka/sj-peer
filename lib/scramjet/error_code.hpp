@@ -26,19 +26,22 @@
  * SOFTWARE.
  */
 
-#include <cstdint>
+#ifndef SCRAMJET__ERROR_CODE_HPP
+#define SCRAMJET__ERROR_CODE_HPP
 
-#include <boost/asio/streambuf.hpp>
+#include <chrono>
+#include <cstdbool>
+#include <functional>
 
 namespace scramjet {
-	class protocol_version {
-	public:
-		protocol_version(boost::asio::streambuf& receive_buffer);
-		void print() const;
+enum error_code {
+	SCRAMJET_OK = 0,
+	SCRAMJET_OPERATION_ABORTED,
+	SCRAMJET_HOST_NOT_FOUND,
+	SCRAMJET_CONNECTION_REFUSED,
+	SCRAMJET_WRONG_MESSAGE_FORMAT,
+};
 
-	private:
-		uint32_t m_major;
-		uint32_t m_minor;
-		uint32_t m_patch;
-	};
-}
+} // namespace scramjet
+
+#endif

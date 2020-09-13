@@ -29,18 +29,31 @@
 #ifndef SCRAMJET__JET_CONNECTION_HPP
 #define SCRAMJET__JET_CONNECTION_HPP
 
+#include <chrono>
 #include <cstdbool>
+#include <cstdint>
+#include <cstdlib>
 #include <functional>
+
+#include "scramjet/error_code.hpp"
 
 namespace scramjet {
 
-typedef std::function<bool> connected_callback_t;
-typedef std::function<void> disconnected_callback_t;
+typedef std::function<void(enum error_code ec)> connected_callback_t;
+typedef std::function<void(enum error_code ec)> disconnected_callback_t;
+typedef std::function<void(enum error_code ec, const uint8_t *message, size_t message_length)> message_received_callback_t;
 
 class jet_connection {
 public:
-	virtual void connect(const connected_callback_t& connect_callback, double timeout_ms) noexcept = 0;
-	virtual void disconnect(const disconnected_callback_t& disconnect_callback) noexcept = 0;
+	virtual void connect(const connected_callback_t& connect_callback, std::chrono::milliseconds timeout) noexcept = 0;
+	virtual void disconnect(void) noexcept = 0;
+	virtual void receive_message(const message_received_callback_t callback) noexcept = 0;
+
+protected:
+	connected_callback_t connected_callback;
+	std::chrono::milliseconds connect_timeout;
+
+	message_received_callback_t message_received_callback;
 };
 } // namespace scramjet
 

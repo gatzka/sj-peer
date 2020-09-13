@@ -26,32 +26,25 @@
  * SOFTWARE.
  */
 
-#include <cstring>
-#include <iostream>
+#include <cstdbool>
+#include <cstdint>
+#include <cstdlib>
 
 #include <boost/asio/streambuf.hpp>
-#include <boost/endian/conversion.hpp>
-
-#include "protocol_version.h"
 
 namespace scramjet {
-	protocol_version::protocol_version(boost::asio::streambuf& receive_buffer)
-	{
-		std::memcpy(&m_major, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_major));
-		receive_buffer.consume(sizeof(m_major));
-		boost::endian::little_to_native_inplace(m_major);
+class protocol_version {
+public:
+	protocol_version(const uint8_t* buffer) noexcept;
+	protocol_version(uint32_t major, uint32_t minor, uint32_t patch) noexcept;
 
-		std::memcpy(&m_minor, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_minor));
-		receive_buffer.consume(sizeof(m_minor));
-		boost::endian::little_to_native_inplace(m_minor);
+	void print() const noexcept;
+	static size_t get_version_size(void) noexcept;
+	bool is_compatible(const protocol_version& v) const noexcept;
 
-		std::memcpy(&m_patch, boost::asio::buffer_cast<const void*>(receive_buffer.data()), sizeof(m_patch));
-		receive_buffer.consume(sizeof(m_patch));
-		boost::endian::little_to_native_inplace(m_patch);
-	}
-
-	void protocol_version::print() const
-	{
-		std::cout << "Protocol version: " << std::dec << m_major << "." << m_minor << "." << m_patch << std::endl;
-	}
-}
+private:
+	uint32_t major;
+	uint32_t minor;
+	uint32_t patch;
+};
+} // namespace scramjet

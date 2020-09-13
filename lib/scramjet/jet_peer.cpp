@@ -26,15 +26,91 @@
  * SOFTWARE.
  */
 
+#include <chrono>
+#include <cstdint>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
+
 #include "scramjet/jet_connection.hpp"
 #include "scramjet/jet_peer.hpp"
+#include "scramjet/message_type.hpp"
+#include "scramjet/protocol_version.hpp"
+
 
 namespace scramjet {
-jet_peer::jet_peer(const jet_connection& connection) noexcept
+
+static protocol_version supported_version(1, 0, 0);
+
+jet_peer::jet_peer(std::unique_ptr<jet_connection> c) noexcept
+        : connection(std::move(c))
 {
 }
 
 jet_peer::~jet_peer() noexcept
 {
+}
+
+void jet_peer::connect(const connected_callback_t& connect_callback, std::chrono::milliseconds timeout) noexcept
+{
+	connected_callback = connect_callback;
+
+	using namespace std::placeholders;
+	connection->connect(std::bind(&jet_peer::connected, this, _1), timeout);
+}
+
+void jet_peer::connected(scramjet::error_code ec)
+{
+	if (connected_callback != nullptr) {
+		connected_callback(ec);
+	}
+
+	if (ec != scramjet::error_code::SCRAMJET_OK) {
+		std::cerr << "Connection not established!" << std::endl;
+		return;
+	}
+
+	using namespace std::placeholders;
+	connection->receive_message(std::bind(&jet_peer::message_received, this, _1, _2, _3));
+}
+
+void jet_peer::disconnect(void) noexcept
+{
+    connection->disconnect();
+}
+
+static bool is_correct_protocol_version(const uint8_t* buffer, size_t buffer_length)
+{
+    uint8_t message_type;
+    if (buffer_length != sizeof(message_type) + protocol_version::get_version_size()) {
+        return false;
+    }
+
+    message_type = *buffer;
+    buffer++;
+    if (message_type != scramjet::message_type::MESSAGE_API_VERSION) {
+        return false;
+    }
+    protocol_version v(buffer);
+    v.print();
+    return v.is_compatible(supported_version);
+}
+
+void jet_peer::message_received(enum error_code ec, const uint8_t* message, size_t message_length)
+{
+    if (ec != scramjet::error_code::SCRAMJET_OK) {
+        disconnect();
+        return;
+    }
+
+    if (!first_message_received) {
+        first_message_received = true;
+        if (!is_correct_protocol_version(message, message_length)) {
+            std::cerr << "protocol API version not supported!" << std::endl;
+            return;
+        }
+    }
+	std::cout << "Got message of length: " << message_length << std::endl;
 }
 } // namespace scramjet
