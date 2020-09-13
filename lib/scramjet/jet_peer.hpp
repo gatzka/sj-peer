@@ -50,9 +50,8 @@ private:
 	connected_callback_t connected_callback;
 
 	void connected(scramjet::error_code ec);
+	void version_received(enum error_code ec, const uint8_t* message, size_t message_length);
 	void message_received(enum error_code ec, const uint8_t* message, size_t message_length);
-
-    bool first_message_received = false;
 };
 } // namespace scramjet
 
