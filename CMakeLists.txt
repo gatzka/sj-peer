@@ -38,6 +38,8 @@ FetchContent_MakeAvailable(GatzkaToolchainFiles)
 
 project(scramjet_peer_all)
 
+include(CTest)
+
 add_subdirectory(lib)
 add_subdirectory(examples)
 
