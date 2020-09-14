@@ -30,6 +30,6 @@
 
 namespace scramjet {
 
-jet_connection::~jet_connection() noexcept {};
+jet_connection::~jet_connection() noexcept {}
 
 }
