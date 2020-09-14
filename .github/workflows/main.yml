@@ -28,20 +28,21 @@ jobs:
         ctest_configuration_type: Debug
         ctest_run_tests: OFF
 
-#  gcc-10-release:
-#    name: x86 gcc-10 Release
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v2
-#    - name: ctest build
-#      uses: gatzka/ctest-build-action@v1.4.0
-#      with:
-#        install_deps: ./.github/workflows/install-deps.sh
-#        ctest_toolchain_file: /tmp/cio/toolchains/x86-linux-gcc-10.cmake
-#        ctest_configuration_type: Release
-#
+  gcc-10-release:
+    name: x86 gcc-10 Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: ctest build
+      uses: gatzka/ctest-build-action@v1.5.0
+      with:
+        install_deps: ./.github/workflows/install-deps.sh
+        ctest_toolchain_file: /tmp/sj-peer/toolchains/x86-linux-gcc-10.cmake
+        ctest_configuration_type: Release
+        ctest_run_tests: OFF
+
 #  gcc-10-valgrind:
 #    name: x86 gcc-10 Valgrind
 #    runs-on: ubuntu-latest
@@ -55,35 +56,37 @@ jobs:
 #        install_deps: ./.github/workflows/install-deps.sh
 #        ctest_toolchain_file: /tmp/cio/toolchains/x86-linux-gcc-10.cmake
 #        ctest_configuration_type: Valgrind
-#
-#  clang-10-debug:
-#    name: x86 clang-10 Debug
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v2
-#    - name: ctest build
-#      uses: gatzka/ctest-build-action@v1.4.0
-#      with:
-#        install_deps: ./.github/workflows/install-deps.sh
-#        ctest_toolchain_file: /tmp/cio/toolchains/x86-linux-clang-10.cmake
-#        ctest_configuration_type: Debug
-#
-#  clang-10-release:
-#    name: x86 clang-10 Release
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v2
-#    - name: ctest build
-#      uses: gatzka/ctest-build-action@v1.4.0
-#      with:
-#        install_deps: ./.github/workflows/install-deps.sh
-#        ctest_toolchain_file: /tmp/cio/toolchains/x86-linux-clang-10.cmake
-#        ctest_configuration_type: Release
-#
+
+  clang-10-debug:
+    name: x86 clang-10 Debug
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: ctest build
+      uses: gatzka/ctest-build-action@v1.5.0
+      with:
+        install_deps: ./.github/workflows/install-deps.sh
+        ctest_toolchain_file: /tmp/sj-peer/toolchains/x86-linux-clang-10.cmake
+        ctest_configuration_type: Debug
+        ctest_run_tests: OFF
+
+  clang-10-release:
+    name: x86 clang-10 Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: ctest build
+      uses: gatzka/ctest-build-action@v1.5.0
+      with:
+        install_deps: ./.github/workflows/install-deps.sh
+        ctest_toolchain_file: /tmp/sj-peer/toolchains/x86-linux-clang-10.cmake
+        ctest_configuration_type: Release
+        ctest_run_tests: OFF
+
 #  clang-10-UndefinedBehaviorSanitizer:
 #    name: x86 clang-10 UndefinedBehaviorSanitizer
 #    runs-on: ubuntu-latest
