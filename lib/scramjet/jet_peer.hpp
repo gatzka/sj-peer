@@ -46,8 +46,8 @@ public:
 	void disconnect(void) noexcept;
 
 private:
-	std::unique_ptr<jet_connection> connection;
-	connected_callback_t connected_callback;
+	std::unique_ptr<jet_connection> m_connection;
+	connected_callback_t m_connected_callback;
 
 	void connected(scramjet::error_code ec);
 	void version_received(enum error_code ec, const uint8_t* message, size_t message_length);

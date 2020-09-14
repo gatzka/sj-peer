@@ -44,7 +44,7 @@ namespace scramjet {
 static protocol_version supported_version(1, 0, 0);
 
 jet_peer::jet_peer(std::unique_ptr<jet_connection> c) noexcept
-        : connection(std::move(c))
+        : m_connection(std::move(c))
 {
 }
 
@@ -54,16 +54,16 @@ jet_peer::~jet_peer() noexcept
 
 void jet_peer::connect(const connected_callback_t& connect_callback, std::chrono::milliseconds timeout) noexcept
 {
-	connected_callback = connect_callback;
+	m_connected_callback = connect_callback;
 
 	using namespace std::placeholders;
-	connection->connect(std::bind(&jet_peer::connected, this, _1), timeout);
+	m_connection->connect(std::bind(&jet_peer::connected, this, _1), timeout);
 }
 
 void jet_peer::connected(scramjet::error_code ec)
 {
-	if (connected_callback != nullptr) {
-		connected_callback(ec);
+	if (m_connected_callback != nullptr) {
+		m_connected_callback(ec);
 	}
 
 	if (ec != scramjet::error_code::SCRAMJET_OK) {
@@ -72,12 +72,12 @@ void jet_peer::connected(scramjet::error_code ec)
 	}
 
 	using namespace std::placeholders;
-	connection->receive_message(std::bind(&jet_peer::version_received, this, _1, _2, _3));
+	m_connection->receive_message(std::bind(&jet_peer::version_received, this, _1, _2, _3));
 }
 
 void jet_peer::disconnect(void) noexcept
 {
-    connection->disconnect();
+    m_connection->disconnect();
 }
 
 static bool is_correct_protocol_version(const uint8_t* buffer, size_t buffer_length)
@@ -112,7 +112,7 @@ void jet_peer::version_received(enum error_code ec, const uint8_t* message, size
 	}
 	
 	using namespace std::placeholders;
-	connection->receive_message(std::bind(&jet_peer::message_received, this, _1, _2, _3));
+	m_connection->receive_message(std::bind(&jet_peer::message_received, this, _1, _2, _3));
 }
 
 void jet_peer::message_received(enum error_code ec, const uint8_t* message, size_t message_length)

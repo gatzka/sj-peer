@@ -43,8 +43,8 @@ public:
 	bool is_compatible(const protocol_version& v) const noexcept;
 
 private:
-	uint32_t major;
-	uint32_t minor;
-	uint32_t patch;
+	uint32_t m_major;
+	uint32_t m_minor;
+	uint32_t m_patch;
 };
 } // namespace scramjet

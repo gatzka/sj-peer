@@ -51,10 +51,10 @@ public:
 	virtual void receive_message(const message_received_callback_t callback) noexcept = 0;
 
 protected:
-	connected_callback_t connected_callback;
-	std::chrono::milliseconds connect_timeout;
+	connected_callback_t m_connected_callback;
+	std::chrono::milliseconds m_connect_timeout;
 
-	message_received_callback_t message_received_callback;
+	message_received_callback_t m_message_received_callback;
 };
 } // namespace scramjet
 

@@ -38,45 +38,45 @@
 namespace scramjet {
 protocol_version::protocol_version(const uint8_t* buffer) noexcept
 {
-	std::memcpy(&major, buffer, sizeof(major));
-	buffer += sizeof(major);
-	boost::endian::little_to_native_inplace(major);
+	std::memcpy(&m_major, buffer, sizeof(m_major));
+	buffer += sizeof(m_major);
+	boost::endian::little_to_native_inplace(m_major);
 
-	std::memcpy(&minor, buffer, sizeof(minor));
-	buffer += sizeof(minor);
-	boost::endian::little_to_native_inplace(minor);
+	std::memcpy(&m_minor, buffer, sizeof(m_minor));
+	buffer += sizeof(m_minor);
+	boost::endian::little_to_native_inplace(m_minor);
 
-	std::memcpy(&patch, buffer, sizeof(patch));
-	boost::endian::little_to_native_inplace(patch);
+	std::memcpy(&m_patch, buffer, sizeof(m_patch));
+	boost::endian::little_to_native_inplace(m_patch);
 }
 
 protocol_version::protocol_version(uint32_t major, uint32_t minor, uint32_t patch) noexcept
 {
-	this->major = major;
-	this->minor = minor;
-	this->patch = patch;
+	m_major = major;
+	m_minor = minor;
+	m_patch = patch;
 }
 
 void protocol_version::print() const noexcept
 {
-	std::cout << "Protocol version: " << std::dec << major << "." << minor << "." << patch << std::endl;
+	std::cout << "Protocol version: " << std::dec << m_major << "." << m_minor << "." << m_patch << std::endl;
 }
 
 bool protocol_version::is_compatible(const protocol_version& v) const noexcept
 {
-	if (this->major != v.major) {
+	if (m_major != v.m_major) {
 		return false;
 	}
 	
-	if (this->minor > v.minor) {
+	if (m_minor > v.m_minor) {
 		return false;
 	}
 
-	if (this->minor < v.minor) {
+	if (m_minor < v.m_minor) {
 		return true;
 	}
 
-	if (this->patch > v.patch) {
+	if (m_patch > v.m_patch) {
 		return false;
 	}
 
@@ -85,6 +85,6 @@ bool protocol_version::is_compatible(const protocol_version& v) const noexcept
 
 size_t protocol_version::get_version_size(void) noexcept
 {
-	return sizeof(protocol_version::major) + sizeof(protocol_version::minor) + sizeof(protocol_version::patch);
+	return sizeof(protocol_version::m_major) + sizeof(protocol_version::m_minor) + sizeof(protocol_version::m_patch);
 }
 } // namespace scramjet

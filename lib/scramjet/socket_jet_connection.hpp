@@ -51,13 +51,14 @@ public:
 	virtual ~socket_jet_connection() noexcept;
 
 private:
-	const std::string host;
-	uint16_t port;
-	boost::asio::ip::tcp::resolver tcp_resolver;
-	boost::asio::ip::tcp::socket tcp_socket;
-	std::unique_ptr<boost::asio::generic::stream_protocol::socket> generic_stream_socket;
-	boost::asio::streambuf receive_buffer;
-	boost::asio::high_resolution_timer deadline;
+	const std::string m_host;
+	uint16_t m_port;
+	boost::asio::ip::tcp::resolver m_tcp_resolver;
+	boost::asio::ip::tcp::socket m_tcp_socket;
+	std::unique_ptr<boost::asio::generic::stream_protocol::socket> m_generic_stream_socket;
+	boost::asio::streambuf m_receive_buffer;
+	boost::asio::high_resolution_timer m_deadline;
+	uint32_t m_message_length;
 
 	static const uint16_t DEFAULT_SOCKET_JET_PORT = UINT16_C(12345);
 
@@ -70,8 +71,6 @@ private:
 	void message_read(const boost::system::error_code& ec) noexcept;
 
 	void handle_message(void);
-
-	uint32_t message_length;
 };
 } // namespace scramjet
 
