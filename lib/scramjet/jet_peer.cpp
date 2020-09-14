@@ -45,6 +45,7 @@ static protocol_version supported_version(1, 0, 0);
 
 jet_peer::jet_peer(std::unique_ptr<jet_connection> c) noexcept
         : m_connection(std::move(c))
+		, m_connected_callback(nullptr)
 {
 }
 

@@ -46,6 +46,8 @@ socket_jet_connection::socket_jet_connection(boost::asio::io_context& ioc, const
         , m_port(p)
         , m_tcp_resolver(ioc)
         , m_tcp_socket(ioc)
+        , m_generic_stream_socket(nullptr)
+        , m_receive_buffer(DEFAULT_RECEIVE_BUFFER_SIZE)
         , m_deadline(ioc)
 {
 }
@@ -60,7 +62,7 @@ void socket_jet_connection::connect(const connected_callback_t& connect_callback
 	m_connected_callback = connect_callback;
 	m_connect_timeout = timeout;
 
-	m_tcp_resolver.async_resolve(m_host, std::to_string(m_port),
+	m_tcp_resolver.async_resolve(m_host, std::to_string(static_cast<unsigned>(m_port)),
 	                             std::bind(&socket_jet_connection::resolve_handler,
 	                                       this,
 	                                       _1,
@@ -158,7 +160,7 @@ void socket_jet_connection::message_length_read(const boost::system::error_code&
 	boost::endian::little_to_native_inplace(m_message_length);
 
 	std::size_t bytes_in_buffer = m_receive_buffer.size();
-	if (bytes_in_buffer < (size_t)m_message_length) {
+	if (bytes_in_buffer < static_cast<size_t>(m_message_length)) {
 		std::size_t bytes_to_read = m_message_length - bytes_in_buffer;
 		boost::asio::async_read(*m_generic_stream_socket.get(),
 		                        m_receive_buffer,
@@ -183,7 +185,9 @@ void socket_jet_connection::message_read(const boost::system::error_code& ec) no
 
 void socket_jet_connection::handle_message(void)
 {
-	m_message_received_callback(SCRAMJET_OK, boost::asio::buffer_cast<const uint8_t*>(m_receive_buffer.data()), (size_t)m_message_length);
+	m_message_received_callback(SCRAMJET_OK,
+	                            boost::asio::buffer_cast<const uint8_t*>(m_receive_buffer.data()),
+	                            static_cast<size_t>(m_message_length));
 	m_receive_buffer.consume(m_message_length);
 }
 

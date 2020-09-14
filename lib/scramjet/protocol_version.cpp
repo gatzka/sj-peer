@@ -37,6 +37,9 @@
 
 namespace scramjet {
 protocol_version::protocol_version(const uint8_t* buffer) noexcept
+        : m_major(0)
+        , m_minor(0)
+        , m_patch(0)
 {
 	std::memcpy(&m_major, buffer, sizeof(m_major));
 	buffer += sizeof(m_major);
@@ -51,10 +54,10 @@ protocol_version::protocol_version(const uint8_t* buffer) noexcept
 }
 
 protocol_version::protocol_version(uint32_t major, uint32_t minor, uint32_t patch) noexcept
+        : m_major(major)
+        , m_minor(minor)
+        , m_patch(patch)
 {
-	m_major = major;
-	m_minor = minor;
-	m_patch = patch;
 }
 
 void protocol_version::print() const noexcept
@@ -67,7 +70,7 @@ bool protocol_version::is_compatible(const protocol_version& v) const noexcept
 	if (m_major != v.m_major) {
 		return false;
 	}
-	
+
 	if (m_minor > v.m_minor) {
 		return false;
 	}

@@ -58,9 +58,10 @@ private:
 	std::unique_ptr<boost::asio::generic::stream_protocol::socket> m_generic_stream_socket;
 	boost::asio::streambuf m_receive_buffer;
 	boost::asio::high_resolution_timer m_deadline;
-	uint32_t m_message_length;
+	uint32_t m_message_length = 0;
 
-	static const uint16_t DEFAULT_SOCKET_JET_PORT = UINT16_C(12345);
+	static const std::uint16_t DEFAULT_SOCKET_JET_PORT = UINT16_C(12345);
+	static const std::size_t DEFAULT_RECEIVE_BUFFER_SIZE = 1024;
 
 	void resolve_handler(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results) noexcept;
 	void resolve_timeout_handler(const boost::system::error_code& ec) noexcept;
