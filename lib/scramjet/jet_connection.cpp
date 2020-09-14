@@ -26,36 +26,10 @@
  * SOFTWARE.
  */
 
-#ifndef SCRAMJET__JET_CONNECTION_HPP
-#define SCRAMJET__JET_CONNECTION_HPP
-
-#include <chrono>
-#include <cstdbool>
-#include <cstdint>
-#include <cstdlib>
-#include <functional>
-
-#include "scramjet/error_code.hpp"
+#include "scramjet/jet_connection.hpp"
 
 namespace scramjet {
 
-typedef std::function<void(enum error_code ec)> connected_callback_t;
-typedef std::function<void(enum error_code ec)> disconnected_callback_t;
-typedef std::function<void(enum error_code ec, const uint8_t *message, size_t message_length)> message_received_callback_t;
+jet_connection::~jet_connection() noexcept {};
 
-class jet_connection {
-public:
-	virtual ~jet_connection() noexcept = 0;
-	virtual void connect(const connected_callback_t& connect_callback, std::chrono::milliseconds timeout) noexcept = 0;
-	virtual void disconnect(void) noexcept = 0;
-	virtual void receive_message(const message_received_callback_t callback) noexcept = 0;
-
-protected:
-	connected_callback_t connected_callback;
-	std::chrono::milliseconds connect_timeout;
-
-	message_received_callback_t message_received_callback;
-};
-} // namespace scramjet
-
-#endif
+}

@@ -33,6 +33,7 @@ find_package(Boost 1.71.0 REQUIRED system QUIET)
 
 add_library(${PROJECT_NAME}
     scramjet/error_code.hpp
+    scramjet/jet_connection.cpp
     scramjet/jet_connection.hpp
     scramjet/jet_peer.cpp
     scramjet/jet_peer.hpp

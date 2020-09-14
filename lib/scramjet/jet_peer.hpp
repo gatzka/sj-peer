@@ -40,7 +40,7 @@ namespace scramjet {
 class jet_peer final {
 public:
 	jet_peer(std::unique_ptr<jet_connection> c) noexcept;
-	virtual ~jet_peer();
+	virtual ~jet_peer() noexcept;
 
 	void connect(const connected_callback_t& connect_callback, std::chrono::milliseconds timeout) noexcept;
 	void disconnect(void) noexcept;
