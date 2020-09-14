@@ -120,9 +120,10 @@ void socket_jet_connection::connect_handler(const boost::system::error_code& ec,
 		return;
 	}
 
+#ifndef __clang_analyzer__
 	m_generic_stream_socket = std::unique_ptr<boost::asio::generic::stream_protocol::socket>(
-	    new boost::asio::generic::stream_protocol::socket(
-	        std::move(m_tcp_socket)));
+	    new boost::asio::generic::stream_protocol::socket(std::move(m_tcp_socket)));
+#endif
 	m_connected_callback(SCRAMJET_OK);
 }
 
