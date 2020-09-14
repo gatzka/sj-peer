@@ -122,6 +122,7 @@ void jet_peer::message_received(enum error_code ec, const uint8_t* message, size
         return;
     }
 
+	(void)message;
 	std::cout << "Got message of length: " << message_length << std::endl;
 }
 } // namespace scramjet

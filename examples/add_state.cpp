@@ -52,8 +52,7 @@ int main(void)
 	boost::asio::io_context io_context;
 	scramjet::jet_peer peer(std::make_unique<scramjet::socket_jet_connection>(io_context, "localhost"));
 
-	peer.connect(NULL, std::chrono::milliseconds(100));
-	//peer.connect(std::bind(&connected, std::placeholders::_1), std::chrono::milliseconds(100));
+	peer.connect(std::bind(&connected, std::placeholders::_1), std::chrono::milliseconds(100));
 	io_context.run();
 	return EXIT_SUCCESS;
 }

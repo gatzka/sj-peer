@@ -105,6 +105,8 @@ void socket_jet_connection::resolve_timeout_handler(const boost::system::error_c
 
 void socket_jet_connection::connect_handler(const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& ep) noexcept
 {
+	(void)ep;
+
 	deadline.cancel();
 	if (ec) {
 		if (ec == boost::asio::error::operation_aborted) {
@@ -163,7 +165,7 @@ void socket_jet_connection::message_length_read(const boost::system::error_code&
 		                                  this,
 		                                  std::placeholders::_1));
 	} else {
-		handle_message(receive_buffer);
+		handle_message();
 	}
 }
 
@@ -174,10 +176,10 @@ void socket_jet_connection::message_read(const boost::system::error_code& ec) no
 		return;
 	}
 
-	handle_message(receive_buffer);
+	handle_message();
 }
 
-void socket_jet_connection::handle_message(boost::asio::streambuf& receive_buffer)
+void socket_jet_connection::handle_message(void)
 {
 	message_received_callback(SCRAMJET_OK, boost::asio::buffer_cast<const uint8_t*>(receive_buffer.data()), (size_t)message_length);
 	receive_buffer.consume(message_length);

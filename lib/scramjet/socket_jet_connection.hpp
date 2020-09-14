@@ -69,7 +69,7 @@ private:
 	void message_length_read(const boost::system::error_code& ec) noexcept;
 	void message_read(const boost::system::error_code& ec) noexcept;
 
-	void handle_message(boost::asio::streambuf& receive_buffer);
+	void handle_message(void);
 
 	uint32_t message_length;
 };
