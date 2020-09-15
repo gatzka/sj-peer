@@ -28,6 +28,7 @@
 
 #include <boost/asio.hpp>
 #include <chrono>
+#include <csignal>
 #include <cstdbool>
 #include <cstdlib>
 #include <functional>
@@ -38,18 +39,34 @@
 #include <scramjet/jet_peer.hpp>
 #include <scramjet/socket_jet_connection.hpp>
 
+static boost::asio::io_context io_context;
+
 static void connected(enum scramjet::error_code ec)
 {
 	if (ec == scramjet::error_code::SCRAMJET_OK) {
 		std::cout << "peer connected!" << std::endl;
 	} else {
 		std::cout << "peer not connected!" << std::endl;
-    }
+	}
+}
+
+static void sighandler(int signum)
+{
+	(void)signum;
+	io_context.stop();
 }
 
 int main(void)
 {
-	boost::asio::io_context io_context;
+	if (std::signal(SIGTERM, sighandler) == SIG_ERR) {
+		return EXIT_FAILURE;
+	}
+
+	if (std::signal(SIGINT, sighandler) == SIG_ERR) {
+		std::signal(SIGTERM, SIG_DFL);
+		return EXIT_FAILURE;
+	}
+
 	scramjet::jet_peer peer(std::make_unique<scramjet::socket_jet_connection>(io_context, "localhost"));
 
 	peer.connect(std::bind(&connected, std::placeholders::_1), std::chrono::milliseconds(100));
