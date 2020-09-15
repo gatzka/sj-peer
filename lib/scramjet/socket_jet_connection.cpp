@@ -32,8 +32,6 @@
 #include <memory>
 #include <string>
 
-#include <iostream> //TODO
-
 #include <boost/asio.hpp>
 #include <boost/endian/conversion.hpp>
 
@@ -46,7 +44,6 @@ socket_jet_connection::socket_jet_connection(boost::asio::io_context& ioc, const
         , m_port(p)
         , m_tcp_resolver(ioc)
         , m_tcp_socket(ioc)
-        , m_generic_stream_socket(nullptr)
         , m_receive_buffer(DEFAULT_RECEIVE_BUFFER_SIZE)
         , m_deadline(ioc)
 {
@@ -73,8 +70,8 @@ void socket_jet_connection::connect(const connected_callback_t& connect_callback
 
 void socket_jet_connection::disconnect(void) noexcept
 {
-	m_generic_stream_socket.get()->cancel();
-	m_generic_stream_socket.get()->close();
+	m_tcp_socket.cancel();
+	m_tcp_socket.close();
 }
 
 void socket_jet_connection::resolve_handler(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results) noexcept
@@ -120,10 +117,6 @@ void socket_jet_connection::connect_handler(const boost::system::error_code& ec,
 		return;
 	}
 
-#ifndef __clang_analyzer__
-	m_generic_stream_socket = std::unique_ptr<boost::asio::generic::stream_protocol::socket>(
-	    new boost::asio::generic::stream_protocol::socket(std::move(m_tcp_socket)));
-#endif
 	m_connected_callback(SCRAMJET_OK);
 }
 
@@ -141,7 +134,7 @@ void socket_jet_connection::receive_message(const message_received_callback_t ca
 {
 	m_message_received_callback = callback;
 
-	boost::asio::async_read(*m_generic_stream_socket.get(),
+	boost::asio::async_read(m_tcp_socket,
 	                        m_receive_buffer,
 	                        boost::asio::transfer_at_least(4),
 	                        std::bind(&socket_jet_connection::message_length_read,
@@ -163,7 +156,7 @@ void socket_jet_connection::message_length_read(const boost::system::error_code&
 	std::size_t bytes_in_buffer = m_receive_buffer.size();
 	if (bytes_in_buffer < static_cast<size_t>(m_message_length)) {
 		std::size_t bytes_to_read = m_message_length - bytes_in_buffer;
-		boost::asio::async_read(*m_generic_stream_socket.get(),
+		boost::asio::async_read(m_tcp_socket,
 		                        m_receive_buffer,
 		                        boost::asio::transfer_at_least(bytes_to_read),
 		                        std::bind(&socket_jet_connection::message_read,

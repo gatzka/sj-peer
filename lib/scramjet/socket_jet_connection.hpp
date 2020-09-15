@@ -31,7 +31,6 @@
 
 #include <chrono>
 #include <cstdint>
-#include <memory>
 #include <string>
 
 #include <boost/asio.hpp>
@@ -55,7 +54,6 @@ private:
 	uint16_t m_port;
 	boost::asio::ip::tcp::resolver m_tcp_resolver;
 	boost::asio::ip::tcp::socket m_tcp_socket;
-	std::unique_ptr<boost::asio::generic::stream_protocol::socket> m_generic_stream_socket;
 	boost::asio::streambuf m_receive_buffer;
 	boost::asio::high_resolution_timer m_deadline;
 	uint32_t m_message_length = 0;
