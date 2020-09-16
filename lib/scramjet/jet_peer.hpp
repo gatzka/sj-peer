@@ -31,11 +31,27 @@
 
 #include <chrono>
 #include <memory>
+#include <string>
 
 #include "scramjet/error_code.hpp"
 #include "scramjet/jet_connection.hpp"
 
 namespace scramjet {
+/**
+ * @brief Function prototype for a "set state" callback.
+ * 
+ * If a state is added, you can provide a state callback method. This callback function conform to this type.
+ * @param key The key under which the state was registered. This might be useful to use a single callback method for several
+ *            states and multiplex via "key".
+ * @param value A pointer the the value to which the state shall be set.
+ * @param value_length A pointer containing the length of the value.
+ * 
+ * @return A pointer to the new value of the state, if the value was not just taken over but adapted. If the value was not adapted,
+ *         the return value is null_ptr. If the value was adapted, the length of the new value is stored in @p value_length.
+ */
+typedef std::function<const uint8_t*(const std::string& key, const uint8_t* value, size_t& value_length)> state_callback_t;
+
+typedef std::function<void(enum error_code ec)> response_callback_t;
 
 class jet_peer final {
 public:
@@ -44,6 +60,10 @@ public:
 
 	void connect(const connected_callback_t& connect_callback, std::chrono::milliseconds timeout) noexcept;
 	void disconnect(void) noexcept;
+
+	void add_state(const std::string& key, const uint8_t* value, size_t value_length,
+	               const state_callback_t& state_callback, std::chrono::milliseconds state_set_timeout,
+	               const response_callback_t& response_callback, std::chrono::milliseconds response_timoeut);
 
 private:
 	std::unique_ptr<jet_connection> m_connection;
