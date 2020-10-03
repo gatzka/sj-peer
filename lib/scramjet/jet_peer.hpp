@@ -30,28 +30,48 @@
 #define SCRAMJET__JET_PEER_HPP
 
 #include <chrono>
+#include <cstdint>
+#include <functional>
 #include <memory>
+#include <vector>
 
 #include "scramjet/error_code.hpp"
+#include "scramjet/function_type.h"
 #include "scramjet/jet_connection.hpp"
 
 namespace scramjet {
 
 class jet_peer final {
 public:
+	/// Opaque data block
+	using data = std::vector <uint8_t >;
+
+	/// @param responseData response data from other peer
+	using response_callback_code = std::function < void (int resultCode) >;
+
 	jet_peer(std::unique_ptr<jet_connection> c) noexcept;
 	virtual ~jet_peer() noexcept;
 
 	void connect(const connected_callback_t& connect_callback, std::chrono::milliseconds timeout) noexcept;
 	void disconnect(void) noexcept;
 
+	/// @param key Key of the state to be created.
+	/// @param value The initial state value
+	void addState(scramjet::jet_peer& peer, const std::string& key, data value, response_callback_code callback);
+
 private:
+	/// @todo We need this id to differentiate all requests that are in flight. Are 16 bit enough or too much?
+	static uint16_t s_nextRequestId;
 	std::unique_ptr<jet_connection> m_connection;
 	connected_callback_t m_connected_callback;
 
 	void connected(scramjet::error_code ec);
 	void version_received(enum error_code ec, const uint8_t* message, size_t message_length);
 	void message_received(enum error_code ec, const uint8_t* message, size_t message_length);
+
+	/// private because it is not to be called directly
+	void sendRequest(function_type function, const std::string& key, data value, response_callback_code callback);
+
 };
 } // namespace scramjet
 

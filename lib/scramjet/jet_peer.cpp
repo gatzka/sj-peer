@@ -41,11 +41,13 @@
 
 namespace scramjet {
 
-static protocol_version supported_version(1, 0, 0);
+const static protocol_version supported_version(1, 0, 0);
+
+uint16_t jet_peer::s_nextRequestId = 0;
 
 jet_peer::jet_peer(std::unique_ptr<jet_connection> c) noexcept
-        : m_connection(std::move(c))
-		, m_connected_callback(nullptr)
+	: m_connection(std::move(c))
+	, m_connected_callback(nullptr)
 {
 }
 
@@ -81,10 +83,15 @@ void jet_peer::disconnect(void) noexcept
     m_connection->disconnect();
 }
 
+void jet_peer::addState(jet_peer& peer, const std::string& key, data value, response_callback_code callback)
+{
+	peer.sendRequest(scramjet::FUNCTION_ADD_STATE, key, value, callback);
+}
+
 static bool is_correct_protocol_version(const uint8_t* buffer, size_t buffer_length)
 {
-    uint8_t message_type;
-    if (buffer_length != sizeof(message_type) + protocol_version::get_version_size()) {
+	uint8_t message_type;
+	if (buffer_length != sizeof(message_type) + protocol_version::get_version_size()) {
         return false;
     }
 
@@ -124,6 +131,25 @@ void jet_peer::message_received(enum error_code ec, const uint8_t* message, size
     }
 
 	(void)message;
-	std::cout << "Got message of length: " << message_length << std::endl;
+		std::cout << "Got message of length: " << message_length << std::endl;
+}
+
+
+/// @param callback What do we expect to get from a request? Should it be just a result code? Are there reuests that return data?
+void jet_peer::sendRequest(function_type function, const std::string& key, data value, response_callback_code callback)
+{
+	/// a request consists of
+	/// -message length (uint32_t
+	/// -message type (request) (uint8_t)
+	/// -request id (created inside)
+	/// -jet function
+	/// -jet function payload
+	message_type messageType = MESSAGE_REQUEST;
+	uint16_t requestId = s_nextRequestId;
+	int32_t jetFunction = 
+	++s_nextRequestId;
+	
+	
+
 }
 } // namespace scramjet
