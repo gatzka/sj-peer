@@ -29,8 +29,10 @@
 #ifndef SCRAMJET__MESSAGE_TYPE_HPP
 #define SCRAMJET__MESSAGE_TYPE_HPP
 
+#include <cstdint>
+
 namespace scramjet {
-enum message_type {
+enum message_type : uint8_t {
 	MESSAGE_API_VERSION = 1,
 	MESSAGE_REQUEST = 2,
 	MESSAGE_RESPONSE = 3
